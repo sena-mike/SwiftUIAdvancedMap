@@ -41,6 +41,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     advancedMap.overlayRendererFactory.rendererFor(overlay) ?? .init()
   }
 
+  #if os(iOS) || os(macOS)
   public func mapView(
       _ mapView: MKMapView,
       annotationView view: MKAnnotationView,
@@ -50,6 +51,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     guard let annotation = view.annotation else { return }
     advancedMap.annotationDragHandler(annotation, annotation.coordinate, oldState, newState)
   }
+  #endif
 
   // MARK: - Gesture Recognizer
 
@@ -78,7 +80,8 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     }
     let coordinate = mapView.convert(gesture.location(in: mapView),
                                      toCoordinateFrom: mapView)
-    advancedMap.tapOrClickHandler(coordinate)
+    logger.debug("Did click on map at: \(String(describing: coordinate), privacy: .private)")
+    advancedMap.tapOrClickHandler?(coordinate)
   }
 #else
   @objc func didTapOnMap(gesture: UITapGestureRecognizer) {
@@ -88,7 +91,8 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     }
     let coordinate = mapView.convert(gesture.location(in: mapView),
                                      toCoordinateFrom: mapView)
-    advancedMap.tapOrClickHandler(coordinate)
+    logger.debug("Did click on map at: \(String(describing: coordinate), privacy: .private)")
+    advancedMap.tapOrClickHandler?(coordinate)
   }
 #endif
   

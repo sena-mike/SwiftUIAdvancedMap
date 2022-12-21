@@ -27,7 +27,9 @@ extension MKPointAnnotation {
     mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: String(describing: MKPointAnnotation.self))
   }, view: { mapView, annotation in
     let view = mapView.dequeueReusableAnnotationView(withIdentifier: String(describing: MKPointAnnotation.self), for: annotation)
+#if os(iOS) || os(macOS)
     (view as? MKMarkerAnnotationView)?.isDraggable = true
+#endif
     return view
   })
 }
@@ -45,43 +47,124 @@ struct ContentView: View {
     }
   }
 
+  var map: some View {
+  #if os(iOS)
+    AdvancedMap(
+      mapRect: $region,
+      showsUserLocation: true,
+      isZoomEnabled: true,
+      isScrollEnabled: true,
+      isRotateEnabled: true,
+      isPitchEnabled: true,
+      showsCompass: true,
+      showsScale: true,
+      annotations: annotations,
+      annotationViewFactory: .combine(
+        MKUserLocation.mkUserLocationViewFactory,
+        MKPointAnnotation.annotationViewFactory
+      ),
+      overlays: overlays,
+      overlayRendererFactory: .factory(for: MKPolygon.self) { polygon in
+        let renderer = MKPolygonRenderer(polygon: polygon)
+        renderer.strokeColor = .red
+        renderer.lineWidth = 4
+        renderer.fillColor = .red.withAlphaComponent(0.3)
+        return renderer
+      },
+      tapOrClickHandler: { location in
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = location
+        annotations.append(annotation)
+        updateOverlays()
+      },
+      annotationDragHandler: { annotation, location, oldState, newState in
+        guard let index = annotations.firstIndex(where: { pointAnnotation in
+          pointAnnotation === annotation
+        }) else { return }
+        annotations[index].coordinate = location
+        updateOverlays()
+      }
+    )
+  #elseif os(macOS)
+    AdvancedMap(
+      mapRect: $region,
+      showsUserLocation: true,
+      isZoomEnabled: true,
+      isScrollEnabled: true,
+      isRotateEnabled: true,
+      isPitchEnabled: true,
+      showsPitchControl: true,
+      showsZoomControls: true,
+      showsCompass: true,
+      showsScale: true,
+      annotations: annotations,
+      annotationViewFactory: .combine(
+        MKUserLocation.mkUserLocationViewFactory,
+        MKPointAnnotation.annotationViewFactory
+      ),
+      overlays: overlays,
+      overlayRendererFactory: .factory(for: MKPolygon.self) { polygon in
+        let renderer = MKPolygonRenderer(polygon: polygon)
+        renderer.strokeColor = .red
+        renderer.lineWidth = 4
+        renderer.fillColor = .red.withAlphaComponent(0.3)
+        return renderer
+      },
+      tapOrClickHandler: { location in
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = location
+        annotations.append(annotation)
+        updateOverlays()
+      },
+      annotationDragHandler: { annotation, location, oldState, newState in
+        guard let index = annotations.firstIndex(where: { pointAnnotation in
+          pointAnnotation === annotation
+        }) else { return }
+        annotations[index].coordinate = location
+        updateOverlays()
+      }
+    )
+#elseif os(tvOS)
+    AdvancedMap(
+      mapRect: $region,
+      showsUserLocation: true,
+      isZoomEnabled: true,
+      isScrollEnabled: true,
+      isRotateEnabled: true,
+      isPitchEnabled: true,
+      showsPitchControl: true,
+      showsZoomControls: true,
+      showsCompass: true,
+      annotations: annotations,
+      annotationViewFactory: .combine(
+        MKUserLocation.mkUserLocationViewFactory,
+        MKPointAnnotation.annotationViewFactory
+      ),
+      overlays: overlays,
+      overlayRendererFactory: .factory(for: MKPolygon.self) { polygon in
+        let renderer = MKPolygonRenderer(polygon: polygon)
+        renderer.strokeColor = .red
+        renderer.lineWidth = 4
+        renderer.fillColor = .red.withAlphaComponent(0.3)
+        return renderer
+      },
+      tapOrClickHandler: { location in
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = location
+        annotations.append(annotation)
+        updateOverlays()
+      }
+    )
+#endif
+  }
+
   var body: some View {
     ZStack {
-      AdvancedMap(
-        mapRect: $region,
-        animateChanges: true,
-        showsUserLocation: true,
-        annotations: annotations,
-        annotationViewFactory: .combine(
-          MKUserLocation.mkUserLocationViewFactory,
-          MKPointAnnotation.annotationViewFactory
-        ),
-        overlays: overlays,
-        overlayRendererFactory: .factory(for: MKPolygon.self) { polygon in
-          let renderer = MKPolygonRenderer(polygon: polygon)
-          renderer.strokeColor = .red
-          renderer.lineWidth = 4
-          renderer.fillColor = .red.withAlphaComponent(0.3)
-          return renderer
-        },
-        tapOrClickHandler: { location in
-          let annotation = MKPointAnnotation()
-          annotation.coordinate = location
-          annotations.append(annotation)
-          updateOverlays()
-        },
-        annotationDragHandler: { annotation, location, oldState, newState in
-          guard let index = annotations.firstIndex(where: { pointAnnotation in
-            pointAnnotation === annotation
-          }) else { return }
-          annotations[index].coordinate = location
-          updateOverlays()
+      map
+        .ignoresSafeArea()
+        .onAppear {
+          CLLocationManager().requestWhenInUseAuthorization()
         }
-      )
-      .ignoresSafeArea()
-      .onAppear {
-        CLLocationManager().requestWhenInUseAuthorization()
-      }
     }
   }
 }
