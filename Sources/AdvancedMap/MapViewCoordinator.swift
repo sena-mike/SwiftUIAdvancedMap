@@ -19,6 +19,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
 
   public func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
     DispatchQueue.main.async {
+      logger.debug("didChange didChangeVisibleRegion: \(String(describing: mapView.visibleMapRect))")
       self.advancedMap.visibleMapRect = mapView.visibleMapRect
     }
   }
@@ -32,6 +33,15 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     logger.debug("regionDidChangeAnimated")
     isChangingRegion = false
   }
+
+  #if os(iOS) || os(macOS)
+  public func mapView(_ mapView: MKMapView, didChange mode: MKUserTrackingMode, animated: Bool) {
+    DispatchQueue.main.async {
+      logger.debug("didChange userTrackingMode: \(String(describing: mode)), animated: \(animated)")
+      self.advancedMap.userTrackingMode = mode
+    }
+  }
+  #endif
 
   public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     advancedMap.annotationViewFactory.mapView(mapView, viewFor: annotation)

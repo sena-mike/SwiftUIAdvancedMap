@@ -36,9 +36,12 @@ extension MKPointAnnotation {
 
 struct ContentView: View {
 
-  @State var region: MKMapRect? = .buschGardens
+  @State var region: MKMapRect? = nil
   @State var overlays: [MKOverlay] = [MKOverlay]()
   @State var annotations: [MKPointAnnotation] = [MKPointAnnotation]()
+  #if os(iOS) || os(macOS)
+  @State var userTrackingMode: MKUserTrackingMode = .follow
+  #endif
 
   func updateOverlays() {
     if annotations.count >= 3 {
@@ -51,6 +54,7 @@ struct ContentView: View {
   #if os(iOS)
     AdvancedMap(
       mapRect: $region,
+      userTrackingMode: $userTrackingMode,
       showsUserLocation: true,
       isZoomEnabled: true,
       isScrollEnabled: true,
@@ -88,6 +92,7 @@ struct ContentView: View {
   #elseif os(macOS)
     AdvancedMap(
       mapRect: $region,
+      userTrackingMode: $userTrackingMode,
       showsUserLocation: true,
       isZoomEnabled: true,
       isScrollEnabled: true,
@@ -147,12 +152,6 @@ struct ContentView: View {
         renderer.lineWidth = 4
         renderer.fillColor = .red.withAlphaComponent(0.3)
         return renderer
-      },
-      tapOrClickHandler: { location in
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = location
-        annotations.append(annotation)
-        updateOverlays()
       }
     )
 #endif
@@ -164,6 +163,7 @@ struct ContentView: View {
         .ignoresSafeArea()
         .onAppear {
           CLLocationManager().requestWhenInUseAuthorization()
+          CLLocationManager().startUpdatingLocation()
         }
     }
   }

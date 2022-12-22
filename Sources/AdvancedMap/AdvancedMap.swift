@@ -5,11 +5,21 @@ import OSLog
 
 #if os(iOS) || os(tvOS)
 public typealias XEdgeInsets = UIEdgeInsets
+public typealias XViewRepresentable = UIViewRepresentable
+public typealias XViewRepresentableContext = UIViewRepresentableContext
 #else
 public typealias XEdgeInsets = NSEdgeInsets
+public typealias XViewRepresentable = NSViewRepresentable
+public typealias XViewRepresentableContext = NSViewRepresentableContext
 #endif
 
 let logger = Logger(subsystem: "com.msena.SwiftUIAdvancedMap", category: "AdvancedMap")
+
+extension XViewRepresentableContext<AdvancedMap> {
+  var shouldAnimateChanges: Bool {
+    return !transaction.disablesAnimations
+  }
+}
 
 public struct AdvancedMap {
 
@@ -25,6 +35,9 @@ public struct AdvancedMap {
   public typealias RegionChangingHandler = (_ changing: Bool, _ animated: Bool) -> Void
 
   @Binding public var visibleMapRect: MKMapRect?
+  #if os(iOS) || os(macOS)
+  @Binding public var userTrackingMode: MKUserTrackingMode
+  #endif
   let edgeInsets: XEdgeInsets
   let showsUserLocation: Bool
   let isZoomEnabled: Bool
@@ -51,6 +64,7 @@ public struct AdvancedMap {
   #if os(iOS)
   public init(
     mapRect: Binding<MKMapRect?>,
+    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
     edgeInsets: XEdgeInsets = .init(),
     showsUserLocation: Bool = false,
     isZoomEnabled: Bool = true,
@@ -67,6 +81,7 @@ public struct AdvancedMap {
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
     self._visibleMapRect = mapRect
+    self._userTrackingMode = userTrackingMode
     self.edgeInsets = edgeInsets
     self.showsUserLocation = showsUserLocation
     self.isZoomEnabled = isZoomEnabled
@@ -85,6 +100,7 @@ public struct AdvancedMap {
   }
   public init(
     mapRect: Binding<MKMapRect?>,
+    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
     edgeInsets: XEdgeInsets = .init(),
     showsUserLocation: Bool = false,
     isZoomEnabled: Bool = true,
@@ -102,6 +118,7 @@ public struct AdvancedMap {
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
     self._visibleMapRect = mapRect
+    self._userTrackingMode = userTrackingMode
     self.edgeInsets = edgeInsets
     self.showsUserLocation = showsUserLocation
     self.isZoomEnabled = isZoomEnabled
@@ -121,6 +138,7 @@ public struct AdvancedMap {
   #elseif os(macOS)
   public init(
     mapRect: Binding<MKMapRect?>,
+    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
     edgeInsets: XEdgeInsets = .init(),
     showsUserLocation: Bool = false,
     isZoomEnabled: Bool = true,
@@ -139,6 +157,7 @@ public struct AdvancedMap {
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
     self._visibleMapRect = mapRect
+    self._userTrackingMode = userTrackingMode
     self.edgeInsets = edgeInsets
     self.showsUserLocation = showsUserLocation
     self.isZoomEnabled = isZoomEnabled
@@ -159,6 +178,7 @@ public struct AdvancedMap {
   }
   public init(
     mapRect: Binding<MKMapRect?>,
+    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
     edgeInsets: XEdgeInsets = .init(),
     showsUserLocation: Bool = false,
     isZoomEnabled: Bool = true,
@@ -178,6 +198,7 @@ public struct AdvancedMap {
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
     self._visibleMapRect = mapRect
+    self._userTrackingMode = userTrackingMode
     self.edgeInsets = edgeInsets
     self.showsUserLocation = showsUserLocation
     self.isZoomEnabled = isZoomEnabled
@@ -273,26 +294,36 @@ public struct AdvancedMap {
   }
 
   func update(_ mapView: MKMapView, context: Context) {
-    if let visibleMapRect, !context.coordinator.isChangingRegion {
-      mapView.setVisibleMapRect(visibleMapRect, edgePadding: edgeInsets, animated: !context.transaction.disablesAnimations)
+    logger.debug("Update Map Begin with animations: \(context.shouldAnimateChanges)")
+    if let visibleMapRect, !context.coordinator.isChangingRegion, userTrackingMode == .none {
+      logger.debug("setVisibleMapRect: \(String(describing: visibleMapRect))")
+      mapView.setVisibleMapRect(visibleMapRect, edgePadding: edgeInsets, animated: context.shouldAnimateChanges)
     }
-
+    // Commmon
     mapView.showsUserLocation = showsUserLocation
     mapView.isZoomEnabled = isZoomEnabled
     mapView.isScrollEnabled = isScrollEnabled
+
+    // iOS or macOS
     #if os(iOS) || os(macOS)
     mapView.isRotateEnabled = isRotateEnabled
     mapView.isPitchEnabled = isPitchEnabled
     mapView.showsCompass = showsCompass
-    #endif
-    #if os(macOS)
-    mapView.showsPitchControl = showsPitchControl
-    mapView.showsZoomControls = showsZoomControls
+    if mapView.userTrackingMode != userTrackingMode {
+      mapView.setUserTrackingMode(userTrackingMode, animated: false)
+    }
     #endif
 
+    // iOS or tvOS
     #if os(iOS) || os(tvOS)
     // Setting this to `true` crashes on macOS.. as of Xcode 14.1
     mapView.showsScale = showsScale
+    #endif
+
+    // macOS Only
+    #if os(macOS)
+    mapView.showsPitchControl = showsPitchControl
+    mapView.showsZoomControls = showsZoomControls
     #endif
 
     mapView.annotations.forEach { annotation in
@@ -316,14 +347,26 @@ public struct AdvancedMap {
         mapView.addOverlay(overlay)
       }
     }
+    logger.debug("Update Map End")
   }
 }
 
-#if os(macOS)
-extension AdvancedMap: NSViewRepresentable {
-  public func makeNSView(context: NSViewRepresentableContext<AdvancedMap>) -> MKMapView {
+extension AdvancedMap: XViewRepresentable {
+
+  public func makeUIView(context: XViewRepresentableContext<AdvancedMap>) -> MKMapView {
+    _makeView(context: context)
+  }
+
+  public func makeNSView(context: Context) -> MKMapView {
+    _makeView(context: context)
+  }
+
+  func _makeView(context: XViewRepresentableContext<AdvancedMap>) -> MKMapView {
     logger.debug("Creating MKMapView")
-    let newMapView = MKMapView()
+    // Without providing a non-zero frame the user tracking mode is reset to `none`
+    // in the delegate after setting on the map.
+    // https://stackoverflow.com/questions/61262404/mkmapview-usertrackingmode-reset-in-swiftui
+    let newMapView = MKMapView(frame: .init(x: 0, y: 0, width: 1, height: 1))
 
     newMapView.delegate = context.coordinator
     if tapOrClickHandler != nil {
@@ -334,33 +377,17 @@ extension AdvancedMap: NSViewRepresentable {
     return newMapView
   }
 
-  public func updateNSView(_ mapView: MKMapView, context: NSViewRepresentableContext<AdvancedMap>) {
+  public func updateNSView(
+    _ mapView: MKMapView,
+    context: XViewRepresentableContext<AdvancedMap>
+  ) {
     update(mapView, context: context)
-  }
-}
-#endif
-
-#if os(iOS) || os(tvOS)
-extension AdvancedMap: UIViewRepresentable {
-
-  public func makeUIView(context: UIViewRepresentableContext<AdvancedMap>) -> MKMapView {
-    logger.debug("Creating MKMapView")
-    let newMapView = MKMapView()
-
-    newMapView.delegate = context.coordinator
-    if tapOrClickHandler != nil {
-      context.coordinator.addGestureRecognizer(mapView: newMapView)
-    }
-    annotationViewFactory.register(in: newMapView)
-
-    return newMapView
   }
 
   public func updateUIView(
     _ mapView: MKMapView,
-    context: UIViewRepresentableContext<AdvancedMap>
+    context: XViewRepresentableContext<AdvancedMap>
   ) {
     update(mapView, context: context)
   }
 }
-#endif
