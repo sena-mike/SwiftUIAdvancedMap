@@ -295,7 +295,7 @@ public struct AdvancedMap {
 
   func update(_ mapView: MKMapView, context: Context) {
     logger.debug("Update Map Begin with animations: \(context.shouldAnimateChanges)")
-    if let visibleMapRect, !context.coordinator.isChangingRegion, userTrackingMode == .none {
+    if let visibleMapRect, !context.coordinator.isChangingRegion, mapView.visibleMapRect != visibleMapRect, userTrackingMode == .none {
       logger.debug("setVisibleMapRect: \(String(describing: visibleMapRect))")
       mapView.setVisibleMapRect(visibleMapRect, edgePadding: edgeInsets, animated: context.shouldAnimateChanges)
     }
