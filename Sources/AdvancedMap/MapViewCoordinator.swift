@@ -33,6 +33,14 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     isChangingRegion = false
   }
 
+  #if os(iOS) || os(macOS)
+  public func mapView(_ mapView: MKMapView, didChange mode: MKUserTrackingMode, animated: Bool) {
+    DispatchQueue.main.async {
+      self.advancedMap.userTrackingMode = mode
+    }
+  }
+  #endif
+
   public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     advancedMap.annotationViewFactory.mapView(mapView, viewFor: annotation)
   }
