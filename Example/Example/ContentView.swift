@@ -36,7 +36,7 @@ extension MKPointAnnotation {
 
 struct ContentView: View {
 
-  @State var region: MKMapRect? = .buschGardens
+  @State var region: MKMapRect? = nil
   @State var overlays: [MKOverlay] = [MKOverlay]()
   @State var annotations: [MKPointAnnotation] = [MKPointAnnotation]()
   #if os(iOS) || os(macOS)
@@ -163,6 +163,7 @@ struct ContentView: View {
         .ignoresSafeArea()
         .onAppear {
           CLLocationManager().requestWhenInUseAuthorization()
+          CLLocationManager().startUpdatingLocation()
         }
     }
   }
