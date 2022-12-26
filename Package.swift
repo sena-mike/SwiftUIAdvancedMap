@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
   name: "SwiftUIAdvancedMap",
-  platforms: [.iOS(.v14), .macOS(.v11), .tvOS(.v14)],
+  platforms: [.iOS(.v16), .macOS(.v13), .tvOS(.v14)],
   products: [
 
     .library(
