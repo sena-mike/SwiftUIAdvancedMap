@@ -7,10 +7,12 @@ import OSLog
 public typealias XEdgeInsets = UIEdgeInsets
 public typealias XViewRepresentable = UIViewRepresentable
 public typealias XViewRepresentableContext = UIViewRepresentableContext
+public typealias XGestureRecognizer = UIGestureRecognizer
 #else
 public typealias XEdgeInsets = NSEdgeInsets
 public typealias XViewRepresentable = NSViewRepresentable
 public typealias XViewRepresentableContext = NSViewRepresentableContext
+public typealias XGestureRecognizer = NSGestureRecognizer
 #endif
 
 let logger = Logger(subsystem: "com.msena.SwiftUIAdvancedMap", category: "AdvancedMap")
