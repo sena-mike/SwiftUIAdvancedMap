@@ -23,6 +23,23 @@ extension XViewRepresentableContext<AdvancedMap> {
   }
 }
 
+public enum Configuration {
+  case standard(
+    _ emphasisStyle: MKStandardMapConfiguration.EmphasisStyle,
+    _ elevationStyle: MKMapConfiguration.ElevationStyle,
+    _ pointOfInterestFilter: MKPointOfInterestFilter,
+    _ showsTraffic: Bool
+  )
+  case hybrid(
+    _ elevationStyle: MKMapConfiguration.ElevationStyle,
+    _ pointOfInterestFilter: MKPointOfInterestFilter,
+    _ showsTraffic: Bool
+  )
+  case imagery(
+    _ elevationStyle: MKMapConfiguration.ElevationStyle
+  )
+}
+
 public struct AdvancedMap {
 
   public typealias DidTapOrClickMapHandler = (CLLocationCoordinate2D) -> Void
@@ -36,6 +53,7 @@ public struct AdvancedMap {
   #endif
   public typealias RegionChangingHandler = (_ changing: Bool, _ animated: Bool) -> Void
 
+  let configuration: Configuration?
   @Binding public var visibleMapRect: MKMapRect?
   #if os(iOS) || os(macOS)
   @Binding public var userTrackingMode: MKUserTrackingMode
@@ -65,6 +83,7 @@ public struct AdvancedMap {
 
   #if os(iOS)
   public init(
+    configuration: Configuration? = nil,
     mapRect: Binding<MKMapRect?>,
     userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
     edgeInsets: XEdgeInsets = .init(),
@@ -82,6 +101,7 @@ public struct AdvancedMap {
     annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
+    self.configuration = configuration
     self._visibleMapRect = mapRect
     self._userTrackingMode = userTrackingMode
     self.edgeInsets = edgeInsets
@@ -101,6 +121,7 @@ public struct AdvancedMap {
     self.regionChangingHandler = regionChangingHandler
   }
   public init(
+    configuration: Configuration? = nil,
     mapRect: Binding<MKMapRect?>,
     userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
     edgeInsets: XEdgeInsets = .init(),
@@ -119,6 +140,7 @@ public struct AdvancedMap {
     annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
+    self.configuration = configuration
     self._visibleMapRect = mapRect
     self._userTrackingMode = userTrackingMode
     self.edgeInsets = edgeInsets
@@ -139,6 +161,7 @@ public struct AdvancedMap {
   }
   #elseif os(macOS)
   public init(
+    configuration: Configuration? = nil,
     mapRect: Binding<MKMapRect?>,
     userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
     edgeInsets: XEdgeInsets = .init(),
@@ -158,6 +181,7 @@ public struct AdvancedMap {
     annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
+    self.configuration = configuration
     self._visibleMapRect = mapRect
     self._userTrackingMode = userTrackingMode
     self.edgeInsets = edgeInsets
@@ -179,6 +203,7 @@ public struct AdvancedMap {
     self.regionChangingHandler = regionChangingHandler
   }
   public init(
+    configuration: Configuration? = nil,
     mapRect: Binding<MKMapRect?>,
     userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
     edgeInsets: XEdgeInsets = .init(),
@@ -199,6 +224,7 @@ public struct AdvancedMap {
     annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
+    self.configuration = configuration
     self._visibleMapRect = mapRect
     self._userTrackingMode = userTrackingMode
     self.edgeInsets = edgeInsets
@@ -221,6 +247,7 @@ public struct AdvancedMap {
   }
   #elseif os(tvOS)
   public init(
+    configuration: Configuration? = nil,
     mapRect: Binding<MKMapRect?>,
     edgeInsets: XEdgeInsets = .init(),
     showsUserLocation: Bool = false,
@@ -238,6 +265,7 @@ public struct AdvancedMap {
     overlayRendererFactory: OverlayRendererFactory = .empty,
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
+    self.configuration = configuration
     self._visibleMapRect = mapRect
     self.edgeInsets = edgeInsets
     self.showsUserLocation = showsUserLocation
@@ -255,6 +283,7 @@ public struct AdvancedMap {
     self.regionChangingHandler = regionChangingHandler
   }
   public init(
+    configuration: Configuration? = nil,
     mapRect: Binding<MKMapRect?>,
     edgeInsets: XEdgeInsets = .init(),
     showsUserLocation: Bool = false,
@@ -273,6 +302,7 @@ public struct AdvancedMap {
     tapOrClickHandler: @escaping DidTapOrClickMapHandler = { _ in },
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
+    self.configuration = configuration
     self._visibleMapRect = mapRect
     self.edgeInsets = edgeInsets
     self.showsUserLocation = showsUserLocation
@@ -301,6 +331,24 @@ public struct AdvancedMap {
       logger.debug("setVisibleMapRect: \(String(describing: visibleMapRect))")
       mapView.setVisibleMapRect(visibleMapRect, edgePadding: edgeInsets, animated: context.shouldAnimateChanges)
     }
+    switch configuration {
+    case let .standard(emphasisStyle, elevationStyle, pointOfInterestFilter, showsTraffic):
+      let style = MKStandardMapConfiguration(elevationStyle: elevationStyle, emphasisStyle: emphasisStyle)
+      style.pointOfInterestFilter = pointOfInterestFilter
+      style.showsTraffic = showsTraffic
+      mapView.preferredConfiguration = style
+    case let .hybrid(elevationStyle, pointOfInterestFilter, showsTraffic):
+      let style = MKHybridMapConfiguration(elevationStyle: elevationStyle)
+      style.pointOfInterestFilter = pointOfInterestFilter
+      style.showsTraffic = showsTraffic
+      mapView.preferredConfiguration = style
+    case let .imagery(elevationStyle):
+      let style = MKImageryMapConfiguration(elevationStyle: elevationStyle)
+      mapView.preferredConfiguration = style
+    case .none:
+      break
+    }
+
     // Commmon
     mapView.showsUserLocation = showsUserLocation
     mapView.isZoomEnabled = isZoomEnabled

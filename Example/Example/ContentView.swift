@@ -75,6 +75,7 @@ struct ContentView: View {
     )
 #elseif os(macOS)
     AdvancedMap(
+      configuration: .standard(.default, .realistic, .includingAll, true),
       mapRect: $region,
       userTrackingMode: $userTrackingMode,
       showsUserLocation: true,
