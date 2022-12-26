@@ -72,38 +72,50 @@ public class Coordinator: NSObject, MKMapViewDelegate {
       target: self,
       action: #selector(Coordinator.didClickOnMap(gesture:))
     )
+    clickGesture.delegate = self
     mapView.addGestureRecognizer(clickGesture)
     #else
     let tapGesture = UITapGestureRecognizer(
       target: self,
       action: #selector(Coordinator.didTapOnMap(gesture:))
     )
+    tapGesture.delegate = self
     mapView.addGestureRecognizer(tapGesture)
     #endif
   }
+}
 
 #if os(macOS)
+extension Coordinator: NSGestureRecognizerDelegate {
   @objc func didClickOnMap(gesture: NSClickGestureRecognizer) {
-    guard gesture.state == .ended else { return }
-    guard let mapView = mapView else {
-      fatalError("Missing mapView")
-    }
-    let coordinate = mapView.convert(gesture.location(in: mapView),
-                                     toCoordinateFrom: mapView)
-    logger.debug("Did click on map at: \(String(describing: coordinate), privacy: .private)")
-    advancedMap.tapOrClickHandler?(coordinate)
+    didTapOrClickOnMap(gesture: gesture)
   }
+
+  @objc public func gestureRecognizer(_ gestureRecognizer: NSGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: NSGestureRecognizer) -> Bool {
+    return true
+  }
+}
 #else
+extension Coordinator: UIGestureRecognizerDelegate {
   @objc func didTapOnMap(gesture: UITapGestureRecognizer) {
+    didTapOrClickOnMap(gesture: gesture)
+  }
+
+  @objc public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+    return true
+  }
+}
+#endif
+
+extension Coordinator {
+  func didTapOrClickOnMap(gesture: XGestureRecognizer) {
     guard gesture.state == .ended else { return }
     guard let mapView = mapView else {
       fatalError("Missing mapView")
     }
     let coordinate = mapView.convert(gesture.location(in: mapView),
                                      toCoordinateFrom: mapView)
-    logger.debug("Did click on map at: \(String(describing: coordinate), privacy: .private)")
+    logger.debug("Did tap or click on map at: \(String(describing: coordinate), privacy: .private)")
     advancedMap.tapOrClickHandler?(coordinate)
   }
-#endif
-  
 }

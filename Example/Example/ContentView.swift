@@ -39,19 +39,23 @@ struct ContentView: View {
   @State var region: MKMapRect? = nil
   @State var overlays: [MKOverlay] = [MKOverlay]()
   @State var annotations: [MKPointAnnotation] = [MKPointAnnotation]()
-  #if os(iOS) || os(macOS)
+#if os(iOS) || os(macOS)
   @State var userTrackingMode: MKUserTrackingMode = .follow
-  #endif
+#endif
 
-  func updateOverlays() {
-    if annotations.count >= 3 {
-      let coordinates = annotations.map(\.coordinate)
-      overlays = [MKPolygon(coordinates: coordinates, count: coordinates.count)]
+  var body: some View {
+    ZStack {
+      map
+        .ignoresSafeArea()
+        .onAppear {
+          CLLocationManager().requestWhenInUseAuthorization()
+          CLLocationManager().startUpdatingLocation()
+        }
     }
   }
 
   var map: some View {
-  #if os(iOS)
+#if os(iOS)
     AdvancedMap(
       mapRect: $region,
       userTrackingMode: $userTrackingMode,
@@ -63,33 +67,13 @@ struct ContentView: View {
       showsCompass: true,
       showsScale: true,
       annotations: annotations,
-      annotationViewFactory: .combine(
-        MKUserLocation.mkUserLocationViewFactory,
-        MKPointAnnotation.annotationViewFactory
-      ),
+      annotationViewFactory: annotationViewFacotry(),
       overlays: overlays,
-      overlayRendererFactory: .factory(for: MKPolygon.self) { polygon in
-        let renderer = MKPolygonRenderer(polygon: polygon)
-        renderer.strokeColor = .red
-        renderer.lineWidth = 4
-        renderer.fillColor = .red.withAlphaComponent(0.3)
-        return renderer
-      },
-      tapOrClickHandler: { location in
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = location
-        annotations.append(annotation)
-        updateOverlays()
-      },
-      annotationDragHandler: { annotation, location, oldState, newState in
-        guard let index = annotations.firstIndex(where: { pointAnnotation in
-          pointAnnotation === annotation
-        }) else { return }
-        annotations[index].coordinate = location
-        updateOverlays()
-      }
+      overlayRendererFactory: overlayRendererFactory(),
+      tapOrClickHandler: tapOrClickHandler,
+      annotationDragHandler: annotationDragHandler
     )
-  #elseif os(macOS)
+#elseif os(macOS)
     AdvancedMap(
       mapRect: $region,
       userTrackingMode: $userTrackingMode,
@@ -103,31 +87,11 @@ struct ContentView: View {
       showsCompass: true,
       showsScale: true,
       annotations: annotations,
-      annotationViewFactory: .combine(
-        MKUserLocation.mkUserLocationViewFactory,
-        MKPointAnnotation.annotationViewFactory
-      ),
+      annotationViewFactory: annotationViewFacotry(),
       overlays: overlays,
-      overlayRendererFactory: .factory(for: MKPolygon.self) { polygon in
-        let renderer = MKPolygonRenderer(polygon: polygon)
-        renderer.strokeColor = .red
-        renderer.lineWidth = 4
-        renderer.fillColor = .red.withAlphaComponent(0.3)
-        return renderer
-      },
-      tapOrClickHandler: { location in
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = location
-        annotations.append(annotation)
-        updateOverlays()
-      },
-      annotationDragHandler: { annotation, location, oldState, newState in
-        guard let index = annotations.firstIndex(where: { pointAnnotation in
-          pointAnnotation === annotation
-        }) else { return }
-        annotations[index].coordinate = location
-        updateOverlays()
-      }
+      overlayRendererFactory: overlayRendererFactory(),
+      tapOrClickHandler: tapOrClickHandler,
+      annotationDragHandler: annotationDragHandler
     )
 #elseif os(tvOS)
     AdvancedMap(
@@ -141,32 +105,57 @@ struct ContentView: View {
       showsZoomControls: true,
       showsCompass: true,
       annotations: annotations,
-      annotationViewFactory: .combine(
-        MKUserLocation.mkUserLocationViewFactory,
-        MKPointAnnotation.annotationViewFactory
-      ),
+      annotationViewFactory: annotationViewFacotry(),
       overlays: overlays,
-      overlayRendererFactory: .factory(for: MKPolygon.self) { polygon in
-        let renderer = MKPolygonRenderer(polygon: polygon)
-        renderer.strokeColor = .red
-        renderer.lineWidth = 4
-        renderer.fillColor = .red.withAlphaComponent(0.3)
-        return renderer
-      }
+      overlayRendererFactory: overlayRendererFactory()
     )
 #endif
   }
 
-  var body: some View {
-    ZStack {
-      map
-        .ignoresSafeArea()
-        .onAppear {
-          CLLocationManager().requestWhenInUseAuthorization()
-          CLLocationManager().startUpdatingLocation()
-        }
+  func updateOverlays() {
+    if annotations.count >= 3 {
+      let coordinates = annotations.map(\.coordinate)
+      overlays = [MKPolygon(coordinates: coordinates, count: coordinates.count)]
     }
   }
+
+  func annotationViewFacotry() -> AnnotationViewFactory {
+    .combine(
+      MKUserLocation.mkUserLocationViewFactory,
+      MKPointAnnotation.annotationViewFactory
+    )
+  }
+
+  func overlayRendererFactory() -> OverlayRendererFactory {
+    .factory(for: MKPolygon.self) { polygon in
+      let renderer = MKPolygonRenderer(polygon: polygon)
+      renderer.strokeColor = .red
+      renderer.lineWidth = 4
+      renderer.fillColor = .red.withAlphaComponent(0.3)
+      return renderer
+    }
+  }
+
+  func tapOrClickHandler(location: CLLocationCoordinate2D) {
+    let annotation = MKPointAnnotation()
+    annotation.coordinate = location
+    annotation.title = "A"
+    annotations.append(annotation)
+    updateOverlays()
+  }
+
+  func annotationDragHandler(
+    annotation: MKAnnotation,
+    location: CLLocationCoordinate2D,
+    oldState: MKAnnotationView.DragState,
+    newState: MKAnnotationView.DragState) {
+      guard let index = annotations.firstIndex(where: { pointAnnotation in
+        pointAnnotation === annotation
+      }) else { return }
+      annotations[index].coordinate = location
+      updateOverlays()
+    }
+
 }
 
 struct ContentView_Previews: PreviewProvider {
