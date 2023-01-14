@@ -19,25 +19,21 @@ public class Coordinator: NSObject, MKMapViewDelegate {
 
   public func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
     DispatchQueue.main.async {
-      logger.debug("didChange didChangeVisibleRegion: \(String(describing: mapView.visibleMapRect))")
       self.advancedMap.visibleMapRect = mapView.visibleMapRect
     }
   }
 
   public func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-    logger.debug("regionWillChangeAnimated")
     isChangingRegion = true
   }
 
   public func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-    logger.debug("regionDidChangeAnimated")
     isChangingRegion = false
   }
 
   #if os(iOS) || os(macOS)
   public func mapView(_ mapView: MKMapView, didChange mode: MKUserTrackingMode, animated: Bool) {
     DispatchQueue.main.async {
-      logger.debug("didChange userTrackingMode: \(String(describing: mode)), animated: \(animated)")
       self.advancedMap.userTrackingMode = mode
     }
   }
@@ -115,7 +111,6 @@ extension Coordinator {
     }
     let coordinate = mapView.convert(gesture.location(in: mapView),
                                      toCoordinateFrom: mapView)
-    logger.debug("Did tap or click on map at: \(String(describing: coordinate), privacy: .private)")
     advancedMap.tapOrClickHandler?(coordinate)
   }
 
