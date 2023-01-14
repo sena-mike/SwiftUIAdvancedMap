@@ -91,8 +91,8 @@ extension Coordinator: NSGestureRecognizerDelegate {
     didTapOrClickOnMap(gesture: gesture)
   }
 
-  @objc public func gestureRecognizer(_ gestureRecognizer: NSGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: NSGestureRecognizer) -> Bool {
-    return true
+  @objc public func gestureRecognizerShouldBegin(_ gestureRecognizer: NSGestureRecognizer) -> Bool {
+    shouldGestureRecognizerBegin(gesture: gestureRecognizer)
   }
 }
 #else
@@ -101,8 +101,8 @@ extension Coordinator: UIGestureRecognizerDelegate {
     didTapOrClickOnMap(gesture: gesture)
   }
 
-  @objc public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-    return true
+  @objc public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+    shouldGestureRecognizerBegin(gesture: gestureRecognizer)
   }
 }
 #endif
@@ -117,5 +117,19 @@ extension Coordinator {
                                      toCoordinateFrom: mapView)
     logger.debug("Did tap or click on map at: \(String(describing: coordinate), privacy: .private)")
     advancedMap.tapOrClickHandler?(coordinate)
+  }
+
+  func shouldGestureRecognizerBegin(gesture: XGestureRecognizer) -> Bool {
+    guard let mapView = mapView else { return false }
+    for view in mapView.subviews {
+      #if os(macOS)
+      if view is MKZoomControl || view is MKPitchControl {
+        let location = gesture.location(in: view)
+        let isInBounds = view.bounds.contains(location)
+        return !isInBounds
+      }
+      #endif
+    }
+    return true
   }
 }
