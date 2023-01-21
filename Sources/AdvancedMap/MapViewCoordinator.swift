@@ -9,26 +9,40 @@ public class Coordinator: NSObject, MKMapViewDelegate {
   /// client should just express what they would like to be visible and we handle the rest?
   var isChangingRegion = false
 
+  var isFirstRender = true
+
   init(advancedMap: AdvancedMap) {
     self.advancedMap = advancedMap
 
     super.init()
   }
 
+  private func updateVisibleBinding() {
+    advancedMap.visibleMapRect = mapView?.visibleMapRect
+  }
+
   // MARK: MKMapViewDelegate
 
   public func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
-    DispatchQueue.main.async {
-      self.advancedMap.visibleMapRect = mapView.visibleMapRect
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      self.updateVisibleBinding()
     }
   }
 
   public func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
     isChangingRegion = true
+    advancedMap.regionChangingHandler(true, animated)
   }
 
   public func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
     isChangingRegion = false
+    advancedMap.regionChangingHandler(false, animated)
+    
+    if isFirstRender {
+      updateVisibleBinding()
+    }
+    isFirstRender = false
   }
 
   #if os(iOS) || os(macOS)
@@ -61,8 +75,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
 
   // MARK: - Gesture Recognizer
 
-  func addGestureRecognizer(mapView: MKMapView) {
-    self.mapView = mapView
+  func addTapOrClickGestureRecognizer(mapView: MKMapView) {
     #if os(macOS)
     let clickGesture = NSClickGestureRecognizer(
       target: self,
@@ -70,6 +83,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     )
     clickGesture.delegate = self
     mapView.addGestureRecognizer(clickGesture)
+
     #else
     let tapGesture = UITapGestureRecognizer(
       target: self,
@@ -77,6 +91,24 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     )
     tapGesture.delegate = self
     mapView.addGestureRecognizer(tapGesture)
+
+    #endif
+  }
+
+  func addLongTapOrClickGestureRecognizer(mapView: MKMapView) {
+    #if os(macOS)
+    let longPress = NSPressGestureRecognizer(
+      target: self,
+      action: #selector(Coordinator.didLongPressOnMap(gesture:))
+    )
+    mapView.addGestureRecognizer(longPress)
+    #else
+    let longTap = UILongPressGestureRecognizer(
+      target: self,
+      action: #selector(Coordinator.didLongPressOnMap(gesture:))
+    )
+    longTap.delegate = self
+    mapView.addGestureRecognizer(longTap)
     #endif
   }
 }
@@ -85,6 +117,10 @@ public class Coordinator: NSObject, MKMapViewDelegate {
 extension Coordinator: NSGestureRecognizerDelegate {
   @objc func didClickOnMap(gesture: NSClickGestureRecognizer) {
     didTapOrClickOnMap(gesture: gesture)
+  }
+
+  @objc func didLongPressOnMap(gesture: NSPressGestureRecognizer) {
+    didLongTapOrClickOnMap(gesture: gesture)
   }
 
   @objc public func gestureRecognizerShouldBegin(_ gestureRecognizer: NSGestureRecognizer) -> Bool {
@@ -97,14 +133,27 @@ extension Coordinator: UIGestureRecognizerDelegate {
     didTapOrClickOnMap(gesture: gesture)
   }
 
+  @objc func didLongPressOnMap(gesture: UILongPressGestureRecognizer) {
+    didLongTapOrClickOnMap(gesture: gesture)
+  }
+
   @objc public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
     shouldGestureRecognizerBegin(gesture: gestureRecognizer)
+  }
+
+  @objc public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+    // Without this a long tap/click gesture will only work on every other attempt.
+    if gestureRecognizer is UILongPressGestureRecognizer {
+      return true
+    }
+
+    return false
   }
 }
 #endif
 
 extension Coordinator {
-  func didTapOrClickOnMap(gesture: XGestureRecognizer) {
+  func didTapOrClickOnMap(gesture: XTapOrClickGestureRecognizer) {
     guard gesture.state == .ended else { return }
     guard let mapView = mapView else {
       fatalError("Missing mapView")
@@ -114,7 +163,18 @@ extension Coordinator {
     advancedMap.tapOrClickHandler?(coordinate)
   }
 
-  func shouldGestureRecognizerBegin(gesture: XGestureRecognizer) -> Bool {
+  func didLongTapOrClickOnMap(gesture: XLongTapOrClickGestureRecognizer) {
+    print("long gesture state: \(String(describing: gesture.state))")
+    guard gesture.state == .began else { return }
+    guard let mapView = mapView else {
+      fatalError("Missing mapView")
+    }
+    let coordinate = mapView.convert(gesture.location(in: mapView),
+                                     toCoordinateFrom: mapView)
+    advancedMap.longPressHandler?(coordinate)
+  }
+
+  func shouldGestureRecognizerBegin(gesture: XTapOrClickGestureRecognizer) -> Bool {
     guard let mapView = mapView else { return false }
     for view in mapView.subviews {
       #if os(macOS)

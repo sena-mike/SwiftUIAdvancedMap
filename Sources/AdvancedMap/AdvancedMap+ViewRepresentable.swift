@@ -18,10 +18,16 @@ extension AdvancedMap: XViewRepresentable {
     // https://stackoverflow.com/questions/61262404/mkmapview-usertrackingmode-reset-in-swiftui
     let newMapView = MKMapView(frame: .init(x: 0, y: 0, width: 1, height: 1))
 
+    context.coordinator.mapView = newMapView
     newMapView.delegate = context.coordinator
     if tapOrClickHandler != nil {
-      context.coordinator.addGestureRecognizer(mapView: newMapView)
+      context.coordinator.addTapOrClickGestureRecognizer(mapView: newMapView)
     }
+
+    if longPressHandler != nil {
+      context.coordinator.addLongTapOrClickGestureRecognizer(mapView: newMapView)
+    }
+
     annotationViewFactory.register(in: newMapView)
 
     return newMapView

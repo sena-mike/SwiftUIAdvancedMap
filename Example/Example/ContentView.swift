@@ -71,6 +71,7 @@ struct ContentView: View {
       overlays: overlays,
       overlayRendererFactory: overlayRendererFactory(),
       tapOrClickHandler: tapOrClickHandler,
+      longPressHandler: tapOrClickHandler,
       annotationDragHandler: annotationDragHandler
     )
 #elseif os(macOS)
@@ -92,6 +93,7 @@ struct ContentView: View {
       overlays: overlays,
       overlayRendererFactory: overlayRendererFactory(),
       tapOrClickHandler: tapOrClickHandler,
+      longPressHandler: tapOrClickHandler,
       annotationDragHandler: annotationDragHandler
     )
 #elseif os(tvOS)
@@ -164,3 +166,4 @@ struct ContentView_Previews: PreviewProvider {
     ContentView()
   }
 }
+

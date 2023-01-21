@@ -5,6 +5,7 @@ import SwiftUI
 public struct AdvancedMap {
 
   public typealias DidTapOrClickMapHandler = (CLLocationCoordinate2D) -> Void
+  public typealias LongPressMapHandler = DidTapOrClickMapHandler
   #if os(iOS) || os(macOS)
   public typealias AnnotationDragHandler = (
     _ annotation: MKAnnotation,
@@ -37,6 +38,7 @@ public struct AdvancedMap {
   let overlays: [MKOverlay]
   let overlayRendererFactory: OverlayRendererFactory
   let tapOrClickHandler: DidTapOrClickMapHandler?
+  let longPressHandler: LongPressMapHandler?
 
   #if os(iOS) || os(macOS)
   var annotationDragHandler: AnnotationDragHandler
@@ -83,6 +85,7 @@ extension AdvancedMap {
     self.overlays = overlays
     self.overlayRendererFactory = overlayRendererFactory
     self.tapOrClickHandler = nil
+    self.longPressHandler = nil
     self.annotationDragHandler = annotationDragHandler
     self.regionChangingHandler = regionChangingHandler
   }
@@ -103,6 +106,7 @@ extension AdvancedMap {
     overlays: [MKOverlay] = [],
     overlayRendererFactory: OverlayRendererFactory = .empty,
     tapOrClickHandler: @escaping DidTapOrClickMapHandler = { _ in },
+    longPressHandler: @escaping LongPressMapHandler = { _ in },
     annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
@@ -122,6 +126,7 @@ extension AdvancedMap {
     self.overlays = overlays
     self.overlayRendererFactory = overlayRendererFactory
     self.tapOrClickHandler = tapOrClickHandler
+    self.longPressHandler = longPressHandler
     self.annotationDragHandler = annotationDragHandler
     self.regionChangingHandler = regionChangingHandler
   }
@@ -165,6 +170,7 @@ extension AdvancedMap {
     self.overlays = overlays
     self.overlayRendererFactory = overlayRendererFactory
     self.tapOrClickHandler = nil
+    self.longPressHandler = nil
     self.annotationDragHandler = annotationDragHandler
     self.regionChangingHandler = regionChangingHandler
   }
@@ -187,6 +193,7 @@ extension AdvancedMap {
     overlays: [MKOverlay] = [],
     overlayRendererFactory: OverlayRendererFactory = .empty,
     tapOrClickHandler: @escaping DidTapOrClickMapHandler = { _ in },
+    longPressHandler: @escaping LongPressMapHandler = { _ in },
     annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
     regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
   ) {
@@ -208,6 +215,7 @@ extension AdvancedMap {
     self.overlays = overlays
     self.overlayRendererFactory = overlayRendererFactory
     self.tapOrClickHandler = tapOrClickHandler
+    self.longPressHandler = longPressHandler
     self.annotationDragHandler = annotationDragHandler
     self.regionChangingHandler = regionChangingHandler
   }
