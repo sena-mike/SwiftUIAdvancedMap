@@ -23,4 +23,4 @@ jobs:
     - name: Check SDKs
       run: xcodebuild -showsdks
     - name: Build Example Project macOS & iOS
-      run: cd Example && xcodebuild -scheme Example -sdk macosx13.0 && xcodebuild -scheme Example -sdk iphoneos
+      run: cd Example && xcodebuild -configuration Release -scheme Example -sdk macosx && xcodebuild -configuration Release -scheme Example -sdk iphoneos
