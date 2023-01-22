@@ -16,9 +16,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
+    - name: Select Xcode
       run: sudo xcode-select -s /Applications/Xcode_14.1.app/Contents/Developer
     - name: Build Package
       run: swift build
-    - name: Build Example Project
+    - name: Check SDKs
+      run: xcodebuild -showsdks
+    - name: Build Example Project macOS & iOS
       run: cd Example && xcodebuild -scheme Example -sdk macosx13.1 && xcodebuild -scheme Example -sdk iphoneos
