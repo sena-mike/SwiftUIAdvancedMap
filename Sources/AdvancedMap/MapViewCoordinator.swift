@@ -11,6 +11,9 @@ public class Coordinator: NSObject, MKMapViewDelegate {
 
   var isFirstRender = true
 
+  var tapOrClickGesture: XTapOrClickGestureRecognizer?
+  var longPressGesture: XLongTapOrClickGestureRecognizer?
+
   init(advancedMap: AdvancedMap) {
     self.advancedMap = advancedMap
 
@@ -83,7 +86,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     )
     clickGesture.delegate = self
     mapView.addGestureRecognizer(clickGesture)
-
+    tapOrClickGesture = clickGesture
     #else
     let tapGesture = UITapGestureRecognizer(
       target: self,
@@ -91,7 +94,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     )
     tapGesture.delegate = self
     mapView.addGestureRecognizer(tapGesture)
-
+    tapOrClickGesture = tapGesture
     #endif
   }
 
@@ -102,6 +105,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
       action: #selector(Coordinator.didLongPressOnMap(gesture:))
     )
     mapView.addGestureRecognizer(longPress)
+    longPressGesture = longPress
     #else
     let longTap = UILongPressGestureRecognizer(
       target: self,
@@ -109,6 +113,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     )
     longTap.delegate = self
     mapView.addGestureRecognizer(longTap)
+    longPressGesture = longTap
     #endif
   }
 }
@@ -120,7 +125,7 @@ extension Coordinator: NSGestureRecognizerDelegate {
   }
 
   @objc func didLongPressOnMap(gesture: NSPressGestureRecognizer) {
-    didLongTapOrClickOnMap(gesture: gesture)
+    didLongPress(gesture: gesture)
   }
 
   @objc public func gestureRecognizerShouldBegin(_ gestureRecognizer: NSGestureRecognizer) -> Bool {
@@ -134,7 +139,7 @@ extension Coordinator: UIGestureRecognizerDelegate {
   }
 
   @objc func didLongPressOnMap(gesture: UILongPressGestureRecognizer) {
-    didLongTapOrClickOnMap(gesture: gesture)
+    didLongPress(gesture: gesture)
   }
 
   @objc public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
@@ -147,7 +152,7 @@ extension Coordinator: UIGestureRecognizerDelegate {
       return true
     }
 
-    return false
+    return true
   }
 }
 #endif
@@ -160,10 +165,11 @@ extension Coordinator {
     }
     let coordinate = mapView.convert(gesture.location(in: mapView),
                                      toCoordinateFrom: mapView)
+    logger.info("didTapOrClickOnMap, calling tapOrClickHandler")
     advancedMap.tapOrClickHandler?(coordinate)
   }
 
-  func didLongTapOrClickOnMap(gesture: XLongTapOrClickGestureRecognizer) {
+  func didLongPress(gesture: XLongTapOrClickGestureRecognizer) {
     print("long gesture state: \(String(describing: gesture.state))")
     guard gesture.state == .began else { return }
     guard let mapView = mapView else {
@@ -171,20 +177,42 @@ extension Coordinator {
     }
     let coordinate = mapView.convert(gesture.location(in: mapView),
                                      toCoordinateFrom: mapView)
+    logger.info("didLongPress, calling longPressHandler")
     advancedMap.longPressHandler?(coordinate)
   }
 
   func shouldGestureRecognizerBegin(gesture: XTapOrClickGestureRecognizer) -> Bool {
+    logger.debug("shouldGestureRecognizerBegin, \(gesture, privacy: .public)")
+    logger.debug("isOurTap, \(gesture == self.tapOrClickGesture, privacy: .public)")
+    logger.debug("isOurLongPress, \(gesture == self.longPressGesture, privacy: .public)")
+
     guard let mapView = mapView else { return false }
-    for view in mapView.subviews {
+    for view in mapView.allDescendantSubViews {
+      let location = gesture.location(in: view)
+      let isInBounds = view.bounds.contains(location)
+      guard isInBounds else { continue }
+      logger.debug("gesture started on subview: \(view)")
+      if view is MKAnnotationView, isInBounds {
+        logger.debug("\(gesture.className) shouldBegin on \(view.className): \(!isInBounds)")
+        return !isInBounds
+      }
       #if os(macOS)
-      if view is MKZoomControl || view is MKPitchControl {
-        let location = gesture.location(in: view)
-        let isInBounds = view.bounds.contains(location)
+      if (view is MKZoomControl || view is MKPitchControl || view is MKCompassButton), isInBounds {
+        logger.debug("\(gesture.className) shouldBegin on \(view.className): \(!isInBounds)")
         return !isInBounds
       }
       #endif
     }
+    logger.debug("\(gesture.className) shouldBegin: true")
     return true
+  }
+}
+
+
+extension XLegacyView {
+  var allDescendantSubViews: [XLegacyView] {
+    var allSubviews = subviews
+    allSubviews.forEach { allSubviews.append(contentsOf: $0.allDescendantSubViews) }
+    return allSubviews
   }
 }

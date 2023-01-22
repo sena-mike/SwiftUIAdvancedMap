@@ -1,6 +1,6 @@
 import MapKit
 
-public enum Configuration {
+public enum Configuration: Hashable {
   case standard(
     _ emphasisStyle: MKStandardMapConfiguration.EmphasisStyle,
     _ elevationStyle: MKMapConfiguration.ElevationStyle,

@@ -36,6 +36,18 @@ extension MKPointAnnotation {
 
 struct ContentView: View {
 
+  enum ConfigurationStyle: String, CaseIterable {
+    case standard, hybrid, sattelite
+  }
+
+  @State var selectedStyle: ConfigurationStyle = .standard
+  var configuration: Configuration {
+    switch selectedStyle {
+    case .standard: return .standard(.default, .realistic, .includingAll, false)
+    case .hybrid: return .hybrid(.realistic, .includingAll, false)
+    case .sattelite: return .imagery(.realistic)
+    }
+  }
   @State var region: MKMapRect? = nil
   @State var overlays: [MKOverlay] = [MKOverlay]()
   @State var annotations: [MKPointAnnotation] = [MKPointAnnotation]()
@@ -44,75 +56,27 @@ struct ContentView: View {
 #endif
 
   var body: some View {
-    ZStack {
-      map
-        .ignoresSafeArea()
-        .onAppear {
-          CLLocationManager().requestWhenInUseAuthorization()
-          CLLocationManager().startUpdatingLocation()
+    NavigationStack {
+      ZStack {
+        map
+          .ignoresSafeArea()
+          .onAppear {
+            CLLocationManager().requestWhenInUseAuthorization()
+            CLLocationManager().startUpdatingLocation()
+          }
+      }
+      .toolbar {
+        ToolbarItem {
+          Picker(selection: $selectedStyle) {
+            ForEach(ConfigurationStyle.allCases, id: \.self) { style in
+              Text(style.rawValue.localizedCapitalized)
+            }
+          } label: {
+            Text("Select a style")
+          }
         }
+      }
     }
-  }
-
-  var map: some View {
-#if os(iOS)
-    AdvancedMap(
-      mapRect: $region,
-      userTrackingMode: $userTrackingMode,
-      showsUserLocation: true,
-      isZoomEnabled: true,
-      isScrollEnabled: true,
-      isRotateEnabled: true,
-      isPitchEnabled: true,
-      showsCompass: true,
-      showsScale: true,
-      annotations: annotations,
-      annotationViewFactory: annotationViewFacotry(),
-      overlays: overlays,
-      overlayRendererFactory: overlayRendererFactory(),
-      tapOrClickHandler: tapOrClickHandler,
-      longPressHandler: tapOrClickHandler,
-      annotationDragHandler: annotationDragHandler
-    )
-#elseif os(macOS)
-    AdvancedMap(
-      configuration: .standard(.default, .realistic, .includingAll, true),
-      mapRect: $region,
-      userTrackingMode: $userTrackingMode,
-      showsUserLocation: true,
-      isZoomEnabled: true,
-      isScrollEnabled: true,
-      isRotateEnabled: true,
-      isPitchEnabled: true,
-      showsPitchControl: true,
-      showsZoomControls: true,
-      showsCompass: true,
-      showsScale: true,
-      annotations: annotations,
-      annotationViewFactory: annotationViewFacotry(),
-      overlays: overlays,
-      overlayRendererFactory: overlayRendererFactory(),
-      tapOrClickHandler: tapOrClickHandler,
-      longPressHandler: tapOrClickHandler,
-      annotationDragHandler: annotationDragHandler
-    )
-#elseif os(tvOS)
-    AdvancedMap(
-      mapRect: $region,
-      showsUserLocation: true,
-      isZoomEnabled: true,
-      isScrollEnabled: true,
-      isRotateEnabled: true,
-      isPitchEnabled: true,
-      showsPitchControl: true,
-      showsZoomControls: true,
-      showsCompass: true,
-      annotations: annotations,
-      annotationViewFactory: annotationViewFacotry(),
-      overlays: overlays,
-      overlayRendererFactory: overlayRendererFactory()
-    )
-#endif
   }
 
   func updateOverlays() {
@@ -158,12 +122,81 @@ struct ContentView: View {
       annotations[index].coordinate = location
       updateOverlays()
     }
-
 }
+
+// MARK: - Platform Specific Map Initialization
+
+extension ContentView {
+  var map: some View {
+#if os(iOS)
+    AdvancedMap(
+      configuration: configuration,
+      mapRect: $region,
+      userTrackingMode: $userTrackingMode,
+      showsUserLocation: true,
+      isZoomEnabled: true,
+      isScrollEnabled: true,
+      isRotateEnabled: true,
+      isPitchEnabled: true,
+      showsCompass: true,
+      showsScale: true,
+      annotations: annotations,
+      annotationViewFactory: annotationViewFacotry(),
+      overlays: overlays,
+      overlayRendererFactory: overlayRendererFactory(),
+//      tapOrClickHandler: tapOrClickHandler,
+      longPressHandler: tapOrClickHandler,
+      annotationDragHandler: annotationDragHandler
+    )
+#elseif os(macOS)
+    AdvancedMap(
+      configuration: configuration,
+      mapRect: $region,
+      userTrackingMode: $userTrackingMode,
+      showsUserLocation: true,
+      isZoomEnabled: true,
+      isScrollEnabled: true,
+      isRotateEnabled: true,
+      isPitchEnabled: true,
+      showsPitchControl: true,
+      showsZoomControls: true,
+      showsCompass: true,
+      showsScale: true,
+      annotations: annotations,
+      annotationViewFactory: annotationViewFacotry(),
+      overlays: overlays,
+      overlayRendererFactory: overlayRendererFactory(),
+      tapOrClickHandler: tapOrClickHandler,
+      longPressHandler: tapOrClickHandler,
+      annotationDragHandler: annotationDragHandler
+    )
+#elseif os(tvOS)
+    AdvancedMap(
+      configuration: configuration,
+      mapRect: $region,
+      showsUserLocation: true,
+      isZoomEnabled: true,
+      isScrollEnabled: true,
+      isRotateEnabled: true,
+      isPitchEnabled: true,
+      showsPitchControl: true,
+      showsZoomControls: true,
+      showsCompass: true,
+      annotations: annotations,
+      annotationViewFactory: annotationViewFacotry(),
+      overlays: overlays,
+      overlayRendererFactory: overlayRendererFactory()
+    )
+#endif
+  }
+}
+
+// MARK: - Previews
 
 struct ContentView_Previews: PreviewProvider {
   static var previews: some View {
     ContentView()
   }
 }
+
 
