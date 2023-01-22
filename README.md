@@ -1,5 +1,7 @@
 # SwiftUIAdvancedMap
 
+[![Swift](https://github.com/sena-mike/SwiftUIAdvancedMap/actions/workflows/swift.yml/badge.svg?branch=main)](https://github.com/sena-mike/SwiftUIAdvancedMap/actions/workflows/swift.yml)
+
 A wrapper around MKMapView with more functionality than Map.
 
 ![A screenshot of SwiftUIAdvancedMap in action](/Resources/screenshot.png)
