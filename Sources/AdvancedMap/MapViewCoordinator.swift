@@ -43,7 +43,10 @@ public class Coordinator: NSObject, MKMapViewDelegate {
     advancedMap.regionChangingHandler(false, animated)
     
     if isFirstRender {
-      updateVisibleBinding()
+      DispatchQueue.main.async { [weak self] in
+        guard let self else { return }
+        self.updateVisibleBinding()
+      }
     }
     isFirstRender = false
   }
@@ -206,6 +209,7 @@ extension Coordinator {
       #endif
     }
     logger.debug("\(type(of: gesture)) shouldBegin: true")
+    mapView.deselectAnnotation(mapView.selectedAnnotations.first, animated: true)
     return true
   }
 }
