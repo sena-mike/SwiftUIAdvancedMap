@@ -181,10 +181,12 @@ extension Coordinator {
     advancedMap.longPressHandler?(coordinate)
   }
 
-  func shouldGestureRecognizerBegin(gesture: XTapOrClickGestureRecognizer) -> Bool {
-    logger.debug("shouldGestureRecognizerBegin, \(gesture, privacy: .public)")
-    logger.debug("isOurTap, \(gesture == self.tapOrClickGesture, privacy: .public)")
-    logger.debug("isOurLongPress, \(gesture == self.longPressGesture, privacy: .public)")
+  func shouldGestureRecognizerBegin(gesture: XGestureRecognizer) -> Bool {
+    logger.debug("""
+    shouldGestureRecognizerBegin,
+    isOurTap, \(gesture == self.tapOrClickGesture, privacy: .public),
+    isOurLongPress, \(gesture == self.longPressGesture, privacy: .public)
+    """)
 
     guard let mapView = mapView else { return false }
     for view in mapView.allDescendantSubViews {
@@ -193,17 +195,17 @@ extension Coordinator {
       guard isInBounds else { continue }
       logger.debug("gesture started on subview: \(view)")
       if view is MKAnnotationView, isInBounds {
-        logger.debug("\(gesture.className) shouldBegin on \(view.className): \(!isInBounds)")
+        logger.debug("\(type(of: gesture)) shouldBegin on \(type(of: view)): \(!isInBounds)")
         return !isInBounds
       }
       #if os(macOS)
       if (view is MKZoomControl || view is MKPitchControl || view is MKCompassButton), isInBounds {
-        logger.debug("\(gesture.className) shouldBegin on \(view.className): \(!isInBounds)")
+        logger.debug("\(gesture.className) shouldBegin on \(type(of: view)): \(!isInBounds)")
         return !isInBounds
       }
       #endif
     }
-    logger.debug("\(gesture.className) shouldBegin: true")
+    logger.debug("\(type(of: gesture)) shouldBegin: true")
     return true
   }
 }
