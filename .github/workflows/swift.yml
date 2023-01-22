@@ -23,4 +23,6 @@ jobs:
     - name: Check SDKs
       run: xcodebuild -showsdks
     - name: Build Example Project macOS & iOS
-      run: cd Example && xcodebuild -configuration Release -scheme Example -sdk macosx && xcodebuild -configuration Release -scheme Example -sdk iphoneos
+      run: cd Example && xcodebuild -configuration Release -scheme Example -sdk macosx CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO 
+    - name: Build iOS
+      run: && xcodebuild -configuration Release -scheme Example -sdk iphoneos CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO 
