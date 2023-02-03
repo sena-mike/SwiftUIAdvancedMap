@@ -58,7 +58,12 @@ struct ContentView: View {
   var body: some View {
     NavigationStack {
       ZStack {
-        map
+        AdvancedMap(mapRect: $region)
+          .mapConfiguration(configuration)
+          .annotations(annotations, annotationViewFactory: annotationViewFacotry())
+          .overlays(overlays, overlayRendererFactory: overlayRendererFactory())
+          .onLongPressMapGesture(tapOrClickHandler)
+          .annotationDragHandler(annotationDragHandler)
           .ignoresSafeArea()
           .onAppear {
             CLLocationManager().requestWhenInUseAuthorization()
@@ -122,73 +127,6 @@ struct ContentView: View {
       annotations[index].coordinate = location
       updateOverlays()
     }
-}
-
-// MARK: - Platform Specific Map Initialization
-
-extension ContentView {
-  var map: some View {
-#if os(iOS)
-    AdvancedMap(
-      configuration: configuration,
-      mapRect: $region,
-      userTrackingMode: $userTrackingMode,
-      showsUserLocation: true,
-      isZoomEnabled: true,
-      isScrollEnabled: true,
-      isRotateEnabled: true,
-      isPitchEnabled: true,
-      showsCompass: true,
-      showsScale: true,
-      annotations: annotations,
-      annotationViewFactory: annotationViewFacotry(),
-      overlays: overlays,
-      overlayRendererFactory: overlayRendererFactory(),
-//      tapOrClickHandler: tapOrClickHandler,
-      longPressHandler: tapOrClickHandler,
-      annotationDragHandler: annotationDragHandler
-    )
-#elseif os(macOS)
-    AdvancedMap(
-      configuration: configuration,
-      mapRect: $region,
-      userTrackingMode: $userTrackingMode,
-      showsUserLocation: true,
-      isZoomEnabled: true,
-      isScrollEnabled: true,
-      isRotateEnabled: true,
-      isPitchEnabled: true,
-      showsPitchControl: true,
-      showsZoomControls: true,
-      showsCompass: true,
-      showsScale: true,
-      annotations: annotations,
-      annotationViewFactory: annotationViewFacotry(),
-      overlays: overlays,
-      overlayRendererFactory: overlayRendererFactory(),
-      tapOrClickHandler: tapOrClickHandler,
-      longPressHandler: tapOrClickHandler,
-      annotationDragHandler: annotationDragHandler
-    )
-#elseif os(tvOS)
-    AdvancedMap(
-      configuration: configuration,
-      mapRect: $region,
-      showsUserLocation: true,
-      isZoomEnabled: true,
-      isScrollEnabled: true,
-      isRotateEnabled: true,
-      isPitchEnabled: true,
-      showsPitchControl: true,
-      showsZoomControls: true,
-      showsCompass: true,
-      annotations: annotations,
-      annotationViewFactory: annotationViewFacotry(),
-      overlays: overlays,
-      overlayRendererFactory: overlayRendererFactory()
-    )
-#endif
-  }
 }
 
 // MARK: - Previews

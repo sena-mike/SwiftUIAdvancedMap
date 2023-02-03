@@ -6,10 +6,10 @@ let package = Package(
   name: "SwiftUIAdvancedMap",
   platforms: [.iOS(.v16), .macOS(.v13), .tvOS(.v14)],
   products: [
-
     .library(
       name: "AdvancedMap",
-      targets: ["AdvancedMap"]),
+      targets: ["AdvancedMap"]
+    ),
   ],
   dependencies: [],
   targets: [

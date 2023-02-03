@@ -16,282 +16,41 @@ public struct AdvancedMap {
   #endif
   public typealias RegionChangingHandler = (_ changing: Bool, _ animated: Bool) -> Void
 
-  let configuration: Configuration?
+  @Environment(\.mapConfiguration) var mapConfiguration
+
   @Binding public var visibleMapRect: MKMapRect?
   #if os(iOS) || os(macOS)
   @Binding public var userTrackingMode: MKUserTrackingMode
   #endif
-  let edgeInsets: XEdgeInsets
-  let showsUserLocation: Bool
-  let isZoomEnabled: Bool
-  let isScrollEnabled: Bool
-  let isRotateEnabled: Bool
-  let isPitchEnabled: Bool
+
+  public init(
+    mapRect: Binding<MKMapRect?>,
+    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none)
+  ) {
+    self._visibleMapRect = mapRect
+    self._userTrackingMode = userTrackingMode
+  }
+
+  @Environment(\.edgeInsets) var edgeInsets
+  @Environment(\.showsUserLocation) var showsUserLocation
+  @Environment(\.isZoomEnabled) var isZoomEnabled
+  @Environment(\.isScrollEnabled) var isScrollEnabled
+  @Environment(\.isRotationEnabled) var isRotationEnabled
+  @Environment(\.isPitchEnabled) var isPitchEnabled
   #if os(macOS)
-  let showsPitchControl: Bool
-  let showsZoomControls: Bool
+  @Environment(\.showsPitchControl) var showsPitchControl
+  @Environment(\.showsZoomControls) var showsZoomControls
   #endif
-  let showsCompass: Bool
-  let showsScale: Bool
-  let annotations: [MKAnnotation]
-  let annotationViewFactory: AnnotationViewFactory
-  let overlays: [MKOverlay]
-  let overlayRendererFactory: OverlayRendererFactory
-  let tapOrClickHandler: DidTapOrClickMapHandler?
-  let longPressHandler: LongPressMapHandler?
-
+  @Environment(\.showsCompass) var showsCompass
+  @Environment(\.showsScale) var showsScale
+  @Environment(\.mapAnnotations) var annotations
+  @Environment(\.annotationViewFactory) var annotationViewFactory
+  @Environment(\.mapOverlays) var overlays
+  @Environment(\.overlayRendererFactory) var overlayRendererFactory
+  @Environment(\.onTapOrClickGesture) var tapOrClickHandler
+  @Environment(\.onLongPressMapGesture) var longPressHandler
   #if os(iOS) || os(macOS)
-  var annotationDragHandler: AnnotationDragHandler
+  @Environment(\.onAnnotationDragGesture) var annotationDragHandler
   #endif
-  var regionChangingHandler: RegionChangingHandler
-}
-
-// MARK: - Initializers
-
-extension AdvancedMap {
-#if os(iOS)
-  public init(
-    configuration: Configuration? = nil,
-    mapRect: Binding<MKMapRect?>,
-    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
-    edgeInsets: XEdgeInsets = .init(),
-    showsUserLocation: Bool = false,
-    isZoomEnabled: Bool = true,
-    isScrollEnabled: Bool = true,
-    isRotateEnabled: Bool = true,
-    isPitchEnabled: Bool = true,
-    showsCompass: Bool = false,
-    showsScale: Bool = false,
-    annotations: [MKAnnotation] = [],
-    annotationViewFactory: AnnotationViewFactory = .empty,
-    overlays: [MKOverlay] = [],
-    overlayRendererFactory: OverlayRendererFactory = .empty,
-    annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
-    regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
-  ) {
-    self.configuration = configuration
-    self._visibleMapRect = mapRect
-    self._userTrackingMode = userTrackingMode
-    self.edgeInsets = edgeInsets
-    self.showsUserLocation = showsUserLocation
-    self.isZoomEnabled = isZoomEnabled
-    self.isScrollEnabled = isScrollEnabled
-    self.isRotateEnabled = isRotateEnabled
-    self.isPitchEnabled = isPitchEnabled
-    self.showsCompass = showsCompass
-    self.showsScale = showsScale
-    self.annotations = annotations
-    self.annotationViewFactory = annotationViewFactory
-    self.overlays = overlays
-    self.overlayRendererFactory = overlayRendererFactory
-    self.tapOrClickHandler = nil
-    self.longPressHandler = nil
-    self.annotationDragHandler = annotationDragHandler
-    self.regionChangingHandler = regionChangingHandler
-  }
-  public init(
-    configuration: Configuration? = nil,
-    mapRect: Binding<MKMapRect?>,
-    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
-    edgeInsets: XEdgeInsets = .init(),
-    showsUserLocation: Bool = false,
-    isZoomEnabled: Bool = true,
-    isScrollEnabled: Bool = true,
-    isRotateEnabled: Bool = true,
-    isPitchEnabled: Bool = true,
-    showsCompass: Bool = false,
-    showsScale: Bool = false,
-    annotations: [MKAnnotation] = [],
-    annotationViewFactory: AnnotationViewFactory = .empty,
-    overlays: [MKOverlay] = [],
-    overlayRendererFactory: OverlayRendererFactory = .empty,
-    tapOrClickHandler: @escaping DidTapOrClickMapHandler = { _ in },
-    longPressHandler: @escaping LongPressMapHandler = { _ in },
-    annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
-    regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
-  ) {
-    self.configuration = configuration
-    self._visibleMapRect = mapRect
-    self._userTrackingMode = userTrackingMode
-    self.edgeInsets = edgeInsets
-    self.showsUserLocation = showsUserLocation
-    self.isZoomEnabled = isZoomEnabled
-    self.isScrollEnabled = isScrollEnabled
-    self.isRotateEnabled = isRotateEnabled
-    self.isPitchEnabled = isPitchEnabled
-    self.showsCompass = showsCompass
-    self.showsScale = showsScale
-    self.annotations = annotations
-    self.annotationViewFactory = annotationViewFactory
-    self.overlays = overlays
-    self.overlayRendererFactory = overlayRendererFactory
-    self.tapOrClickHandler = tapOrClickHandler
-    self.longPressHandler = longPressHandler
-    self.annotationDragHandler = annotationDragHandler
-    self.regionChangingHandler = regionChangingHandler
-  }
-#elseif os(macOS)
-  public init(
-    configuration: Configuration? = nil,
-    mapRect: Binding<MKMapRect?>,
-    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
-    edgeInsets: XEdgeInsets = .init(),
-    showsUserLocation: Bool = false,
-    isZoomEnabled: Bool = true,
-    isScrollEnabled: Bool = true,
-    isRotateEnabled: Bool = true,
-    isPitchEnabled: Bool = true,
-    showsPitchControl: Bool = false,
-    showsZoomControls: Bool = false,
-    showsCompass: Bool = false,
-    showsScale: Bool = false,
-    annotations: [MKAnnotation] = [],
-    annotationViewFactory: AnnotationViewFactory = .empty,
-    overlays: [MKOverlay] = [],
-    overlayRendererFactory: OverlayRendererFactory = .empty,
-    annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
-    regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
-  ) {
-    self.configuration = configuration
-    self._visibleMapRect = mapRect
-    self._userTrackingMode = userTrackingMode
-    self.edgeInsets = edgeInsets
-    self.showsUserLocation = showsUserLocation
-    self.isZoomEnabled = isZoomEnabled
-    self.isScrollEnabled = isScrollEnabled
-    self.isRotateEnabled = isRotateEnabled
-    self.isPitchEnabled = isPitchEnabled
-    self.showsPitchControl = showsPitchControl
-    self.showsZoomControls = showsZoomControls
-    self.showsCompass = showsCompass
-    self.showsScale = showsScale
-    self.annotations = annotations
-    self.annotationViewFactory = annotationViewFactory
-    self.overlays = overlays
-    self.overlayRendererFactory = overlayRendererFactory
-    self.tapOrClickHandler = nil
-    self.longPressHandler = nil
-    self.annotationDragHandler = annotationDragHandler
-    self.regionChangingHandler = regionChangingHandler
-  }
-  public init(
-    configuration: Configuration? = nil,
-    mapRect: Binding<MKMapRect?>,
-    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none),
-    edgeInsets: XEdgeInsets = .init(),
-    showsUserLocation: Bool = false,
-    isZoomEnabled: Bool = true,
-    isScrollEnabled: Bool = true,
-    isRotateEnabled: Bool = true,
-    isPitchEnabled: Bool = true,
-    showsPitchControl: Bool = false,
-    showsZoomControls: Bool = false,
-    showsCompass: Bool = false,
-    showsScale: Bool = false,
-    annotations: [MKAnnotation] = [],
-    annotationViewFactory: AnnotationViewFactory = .empty,
-    overlays: [MKOverlay] = [],
-    overlayRendererFactory: OverlayRendererFactory = .empty,
-    tapOrClickHandler: @escaping DidTapOrClickMapHandler = { _ in },
-    longPressHandler: @escaping LongPressMapHandler = { _ in },
-    annotationDragHandler: @escaping AnnotationDragHandler = { _, _, _, _ in },
-    regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
-  ) {
-    self.configuration = configuration
-    self._visibleMapRect = mapRect
-    self._userTrackingMode = userTrackingMode
-    self.edgeInsets = edgeInsets
-    self.showsUserLocation = showsUserLocation
-    self.isZoomEnabled = isZoomEnabled
-    self.isScrollEnabled = isScrollEnabled
-    self.isRotateEnabled = isRotateEnabled
-    self.isPitchEnabled = isPitchEnabled
-    self.showsPitchControl = showsPitchControl
-    self.showsZoomControls = showsZoomControls
-    self.showsCompass = showsCompass
-    self.showsScale = showsScale
-    self.annotations = annotations
-    self.annotationViewFactory = annotationViewFactory
-    self.overlays = overlays
-    self.overlayRendererFactory = overlayRendererFactory
-    self.tapOrClickHandler = tapOrClickHandler
-    self.longPressHandler = longPressHandler
-    self.annotationDragHandler = annotationDragHandler
-    self.regionChangingHandler = regionChangingHandler
-  }
-#elseif os(tvOS)
-  public init(
-    configuration: Configuration? = nil,
-    mapRect: Binding<MKMapRect?>,
-    edgeInsets: XEdgeInsets = .init(),
-    showsUserLocation: Bool = false,
-    isZoomEnabled: Bool = true,
-    isScrollEnabled: Bool = true,
-    isRotateEnabled: Bool = true,
-    isPitchEnabled: Bool = true,
-    showsPitchControl: Bool = false,
-    showsZoomControls: Bool = false,
-    showsCompass: Bool = false,
-    showsScale: Bool = false,
-    annotations: [MKAnnotation] = [],
-    annotationViewFactory: AnnotationViewFactory = .empty,
-    overlays: [MKOverlay] = [],
-    overlayRendererFactory: OverlayRendererFactory = .empty,
-    regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
-  ) {
-    self.configuration = configuration
-    self._visibleMapRect = mapRect
-    self.edgeInsets = edgeInsets
-    self.showsUserLocation = showsUserLocation
-    self.isZoomEnabled = isZoomEnabled
-    self.isScrollEnabled = isScrollEnabled
-    self.isRotateEnabled = isRotateEnabled
-    self.isPitchEnabled = isPitchEnabled
-    self.showsCompass = showsCompass
-    self.showsScale = showsScale
-    self.annotations = annotations
-    self.annotationViewFactory = annotationViewFactory
-    self.overlays = overlays
-    self.tapOrClickHandler = nil
-    self.overlayRendererFactory = overlayRendererFactory
-    self.regionChangingHandler = regionChangingHandler
-  }
-  public init(
-    configuration: Configuration? = nil,
-    mapRect: Binding<MKMapRect?>,
-    edgeInsets: XEdgeInsets = .init(),
-    showsUserLocation: Bool = false,
-    isZoomEnabled: Bool = true,
-    isScrollEnabled: Bool = true,
-    isRotateEnabled: Bool = true,
-    isPitchEnabled: Bool = true,
-    showsPitchControl: Bool = false,
-    showsZoomControls: Bool = false,
-    showsCompass: Bool = false,
-    showsScale: Bool = false,
-    annotations: [MKAnnotation] = [],
-    annotationViewFactory: AnnotationViewFactory = .empty,
-    overlays: [MKOverlay] = [],
-    overlayRendererFactory: OverlayRendererFactory = .empty,
-    tapOrClickHandler: @escaping DidTapOrClickMapHandler = { _ in },
-    regionChangingHandler: @escaping RegionChangingHandler = { _, _ in }
-  ) {
-    self.configuration = configuration
-    self._visibleMapRect = mapRect
-    self.edgeInsets = edgeInsets
-    self.showsUserLocation = showsUserLocation
-    self.isZoomEnabled = isZoomEnabled
-    self.isScrollEnabled = isScrollEnabled
-    self.isRotateEnabled = isRotateEnabled
-    self.isPitchEnabled = isPitchEnabled
-    self.showsCompass = showsCompass
-    self.showsScale = showsScale
-    self.annotations = annotations
-    self.annotationViewFactory = annotationViewFactory
-    self.overlays = overlays
-    self.overlayRendererFactory = overlayRendererFactory
-    self.tapOrClickHandler = tapOrClickHandler
-    self.regionChangingHandler = regionChangingHandler
-  }
-#endif
+  @Environment(\.mapRegionChangingHandler) var regionChangingHandler
 }

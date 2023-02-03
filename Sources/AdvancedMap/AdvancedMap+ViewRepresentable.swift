@@ -28,8 +28,7 @@ extension AdvancedMap: XViewRepresentable {
       context.coordinator.addLongTapOrClickGestureRecognizer(mapView: newMapView)
     }
 
-    annotationViewFactory.register(in: newMapView)
-
+    annotationViewFactory?.register(in: newMapView)
     return newMapView
   }
 
@@ -52,10 +51,13 @@ extension AdvancedMap: XViewRepresentable {
   }
 
   func update(_ mapView: MKMapView, context: Context) {
-    if let visibleMapRect, !context.coordinator.isChangingRegion, mapView.visibleMapRect != visibleMapRect, userTrackingMode == .none {
+    if let visibleMapRect,
+        !context.coordinator.isChangingRegion,
+        mapView.visibleMapRect != visibleMapRect,
+        userTrackingMode == .none {
       mapView.setVisibleMapRect(visibleMapRect, edgePadding: edgeInsets, animated: context.shouldAnimateChanges)
     }
-    switch configuration {
+    switch mapConfiguration {
     case let .standard(emphasisStyle, elevationStyle, pointOfInterestFilter, showsTraffic):
       let style = MKStandardMapConfiguration(elevationStyle: elevationStyle, emphasisStyle: emphasisStyle)
       style.pointOfInterestFilter = pointOfInterestFilter
@@ -80,7 +82,7 @@ extension AdvancedMap: XViewRepresentable {
 
     // iOS or macOS
     #if os(iOS) || os(macOS)
-    mapView.isRotateEnabled = isRotateEnabled
+    mapView.isRotateEnabled = isRotationEnabled
     mapView.isPitchEnabled = isPitchEnabled
     mapView.showsCompass = showsCompass
     if mapView.userTrackingMode != userTrackingMode {
