@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A66EA5FD298D52A300F9E5F9 /* READMESampleMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A66EA5FC298D52A300F9E5F9 /* READMESampleMap.swift */; };
 		A6982BBC297C822200F792BE /* ConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6982BBB297C822200F792BE /* ConfigurationView.swift */; };
 		A6E5DD4B29524A100017FDB9 /* ExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6E5DD4A29524A100017FDB9 /* ExampleApp.swift */; };
 		A6E5DD4D29524A100017FDB9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6E5DD4C29524A100017FDB9 /* ContentView.swift */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A66EA5FC298D52A300F9E5F9 /* READMESampleMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = READMESampleMap.swift; sourceTree = "<group>"; };
 		A6982BBB297C822200F792BE /* ConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigurationView.swift; sourceTree = "<group>"; };
 		A6E5DD4729524A100017FDB9 /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A6E5DD4A29524A100017FDB9 /* ExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleApp.swift; sourceTree = "<group>"; };
@@ -61,6 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				A6E6C8EB29524B28001DD9FD /* Info.plist */,
+				A66EA5FC298D52A300F9E5F9 /* READMESampleMap.swift */,
 				A6E5DD4A29524A100017FDB9 /* ExampleApp.swift */,
 				A6E5DD4C29524A100017FDB9 /* ContentView.swift */,
 				A6E5DD4E29524A110017FDB9 /* Assets.xcassets */,
@@ -161,6 +164,7 @@
 			files = (
 				A6E5DD4D29524A100017FDB9 /* ContentView.swift in Sources */,
 				A6982BBC297C822200F792BE /* ConfigurationView.swift in Sources */,
+				A66EA5FD298D52A300F9E5F9 /* READMESampleMap.swift in Sources */,
 				A6E5DD4B29524A100017FDB9 /* ExampleApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

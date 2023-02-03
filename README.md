@@ -24,13 +24,13 @@ A wrapper around MKMapView with more functionality than Map.
 
 ```swift
 struct TappableMap: View {
-  
-  @State var rect: MKMapRect? = nil
-
   var body: some View {
-    AdvancedMap(mapRect: $rect) { coordinate in
-      print("Tapped on map at: \(coordinate)")
-    }
+    // `.constant(nil)` uses MKMapView's behavior of starting the map over the phone's current country. 
+    // Still scrollable by default.
+    AdvancedMap(mapRect: .constant(nil))
+      .onTapOrClickMapGesture { coordinate in
+        print("Tapped map at: \(coordinate)")
+      }
   }
 }
 ```
@@ -39,29 +39,27 @@ struct TappableMap: View {
 
 ```swift
 struct TappableMap: View {
-  
+
   static let annotationViewFactory = AnnotationViewFactory(
     register: { mapView in
       mapView.register(MKMarkerAnnotationView.self, forAnnotationViewWithReuseIdentifier: String(describing: MKPointAnnotation.self))
-    }, 
+    },
     view: { mapView, annotation in
       mapView.dequeueReusableAnnotationView(withIdentifier: String(describing: MKPointAnnotation.self), for: annotation)
     }
   )
-  
+
   @State var rect: MKMapRect? = nil
   @State var annotations: [MKPointAnnotation] = [MKPointAnnotation]()
 
   var body: some View {
-    AdvancedMap(
-      mapRect: $rect,
-      annotations: annotations,
-      annotationViewFactory: TappableMap.annotationViewFactory
-    ) { coordinate in
-      let annotation = MKPointAnnotation()
-      annotation.coordinate = coordinate
-      annotations.append(annotation)
-    }
+    AdvancedMap(mapRect: $rect)
+      .annotations(annotations, annotationViewFactory: Self.annotationViewFactory)
+      .onTapOrClickMapGesture { coordinate in
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        annotations.append(annotation)
+      }
   }
 }
 ```

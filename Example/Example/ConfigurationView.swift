@@ -23,7 +23,8 @@ struct ConfigurationView: View {
   var body: some View {
     NavigationStack {
       ZStack {
-        AdvancedMap(configuration: configuration, mapRect: $region)
+        AdvancedMap(mapRect: $region)
+          .mapConfiguration(configuration)
           .ignoresSafeArea()
           .onAppear {
             CLLocationManager().requestWhenInUseAuthorization()

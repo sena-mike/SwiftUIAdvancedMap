@@ -35,12 +35,12 @@ public class Coordinator: NSObject, MKMapViewDelegate {
 
   public func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
     isChangingRegion = true
-    advancedMap.regionChangingHandler(true, animated)
+    advancedMap.regionChangingHandler?(true, animated)
   }
 
   public func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
     isChangingRegion = false
-    advancedMap.regionChangingHandler(false, animated)
+    advancedMap.regionChangingHandler?(false, animated)
     
     if isFirstRender {
       DispatchQueue.main.async { [weak self] in
@@ -60,11 +60,11 @@ public class Coordinator: NSObject, MKMapViewDelegate {
   #endif
 
   public func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-    advancedMap.annotationViewFactory.mapView(mapView, viewFor: annotation)
+    advancedMap.annotationViewFactory?.mapView(mapView, viewFor: annotation)
   }
 
   public func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-    advancedMap.overlayRendererFactory.rendererFor(overlay) ?? .init()
+    advancedMap.overlayRendererFactory?.rendererFor(overlay) ?? .init()
   }
 
   #if os(iOS) || os(macOS)
@@ -75,7 +75,7 @@ public class Coordinator: NSObject, MKMapViewDelegate {
       fromOldState oldState: MKAnnotationView.DragState
   ) {
     guard let annotation = view.annotation else { return }
-    advancedMap.annotationDragHandler(annotation, annotation.coordinate, oldState, newState)
+    advancedMap.annotationDragHandler?(annotation, annotation.coordinate, oldState, newState)
   }
   #endif
 
