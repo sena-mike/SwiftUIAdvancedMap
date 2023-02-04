@@ -51,12 +51,29 @@ extension AdvancedMap: XViewRepresentable {
   }
 
   func update(_ mapView: MKMapView, context: Context) {
-    if let visibleMapRect,
-        !context.coordinator.isChangingRegion,
-        mapView.visibleMapRect != visibleMapRect,
-        userTrackingMode == .none {
-      mapView.setVisibleMapRect(visibleMapRect, edgePadding: edgeInsets, animated: context.shouldAnimateChanges)
+    if let mapVisibility, !context.coordinator.isChangingRegion {
+      switch mapVisibility {
+      case .centerCoordinate(let coordinate):
+        if mapView.centerCoordinate != coordinate {
+          mapView.setCenter(coordinate, animated: context.shouldAnimateChanges)
+        }
+      case .region(let region):
+        if mapView.region != region {
+          mapView.setRegion(region, animated: context.shouldAnimateChanges)
+        }
+      case .visibleMapRect(let mapRect):
+        if mapView.visibleMapRect != mapRect {
+          mapView.setVisibleMapRect(mapRect, edgePadding: edgeInsets, animated: context.shouldAnimateChanges)
+        }
+      case .annotations(let annotations):
+        mapView.showAnnotations(annotations, animated: context.shouldAnimateChanges)
+      case .camera(let camera):
+        if mapView.camera != camera {
+          mapView.setCamera(camera, animated: context.shouldAnimateChanges)
+        }
+      }
     }
+
     switch mapConfiguration {
     case let .standard(emphasisStyle, elevationStyle, pointOfInterestFilter, showsTraffic):
       let style = MKStandardMapConfiguration(elevationStyle: elevationStyle, emphasisStyle: emphasisStyle)

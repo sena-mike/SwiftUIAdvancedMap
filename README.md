@@ -4,20 +4,22 @@
 
 A wrapper around MKMapView with more functionality than Map.
 
-![A screenshot of SwiftUIAdvancedMap in action](/Resources/screenshot.png)
+| Points and Overlays  | Camera  | Styling |
+|:----------|:----------|:----------|
+| ![Points Screenshot](/Resources/pointsAndOverlays.png) | ![Camera Control](/Resources/lincoln.png) | ![Sat Screenshot](/Resources/la-sat.png) |  
+
+
 
 | Feature  | `AdvancedMap`  | `MapKit.Map`  |
 |:----------|:----------|:----------|
-| Tap Gesture with Map coordinates passed into the Handler. | ✅ | ❌ |
-| Annotations | ✅ <br> (UIKit Annotation Views) | ✅ <br>(SwiftUI Annotation Views) |
-| Drag and Drop Annotations | ✅ | ❌ |
+| Tap/Long Press Gestures with Map coordinates passed into the Handlers. | ✅ | ❌ |
+| Annotations with Drag and Drop support | ✅ <br> (UIKit Annotation Views) | ✅ <br>(SwiftUI Annotation Views) |
 | Overlays | ✅ <br> (UIKit Overlay Views) | ❌ |
 | Specify EdgeInsets for UI overlays | ✅ | ❌ |
 | Display User Location | ✅ <br>(via `AnnoatationViewFactory`) | ✅ <br>(as an initialization parameter) |
-| User Tracking Mode | ❌ | ✅ |
-| Region State Changing Handler<br> (Animation in progress) | ✅ | ❌ |
-| Animate Changes Control | ✅ | ❌ |
+| Region State Changing Handler, a callback that informs when a map change Animation in progress. | ✅ | ❌ |
 | Binding to Optional map region so map is initially positioned around country bounding box. | ✅ | ❌ |
+| `MKMapCamera` support | ✅ | ❌ |
 
 
 ### Tap or Click Gesture with Coordinate on Map.
@@ -49,11 +51,11 @@ struct TappableMap: View {
     }
   )
 
-  @State var rect: MKMapRect? = nil
+  @State var mapVisibility: MapVisibility?
   @State var annotations: [MKPointAnnotation] = [MKPointAnnotation]()
 
   var body: some View {
-    AdvancedMap(mapRect: $rect)
+    AdvancedMap(mapVisibility: $mapVisibility)
       .annotations(annotations, annotationViewFactory: Self.annotationViewFactory)
       .onTapOrClickMapGesture { coordinate in
         let annotation = MKPointAnnotation()

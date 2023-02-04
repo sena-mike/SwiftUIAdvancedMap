@@ -2,11 +2,21 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
+public enum MapVisibility {
+  case region(MKCoordinateRegion)
+  case centerCoordinate(CLLocationCoordinate2D)
+  case visibleMapRect(MKMapRect)
+  case annotations([MKAnnotation])
+  case camera(MKMapCamera)
+}
+
 public struct AdvancedMap {
 
   public typealias DidTapOrClickMapHandler = (CLLocationCoordinate2D) -> Void
   public typealias LongPressMapHandler = DidTapOrClickMapHandler
-  #if os(iOS) || os(macOS)
+  public typealias RegionChangingHandler = (_ changing: Bool, _ animated: Bool) -> Void
+
+#if os(iOS) || os(macOS)
   public typealias AnnotationDragHandler = (
     _ annotation: MKAnnotation,
     _ location: CLLocationCoordinate2D,
@@ -14,22 +24,20 @@ public struct AdvancedMap {
     _ newState: MKAnnotationView.DragState
   ) -> Void
   #endif
-  public typealias RegionChangingHandler = (_ changing: Bool, _ animated: Bool) -> Void
 
   @Environment(\.mapConfiguration) var mapConfiguration
 
-  @Binding public var visibleMapRect: MKMapRect?
+  /// Use `mapVisibility` to control what is currently visible on the map. Set values to this binding to change the map
+  /// programmatically, when the user pans around, zooms or tilts the map the binding is written to by the Map.
+  ///
+  /// Currently there is no way to fetch a different kind of `MapVisibility` value from the map, the map will only write in the same
+  /// case of the enum it received. However, if `nil` is passed initially the map **will** begin writing out the `.centerCoordinate`
+  /// case as the user moves the map.
+  @Binding public var mapVisibility: MapVisibility?
+
   #if os(iOS) || os(macOS)
   @Binding public var userTrackingMode: MKUserTrackingMode
   #endif
-
-  public init(
-    mapRect: Binding<MKMapRect?>,
-    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none)
-  ) {
-    self._visibleMapRect = mapRect
-    self._userTrackingMode = userTrackingMode
-  }
 
   @Environment(\.edgeInsets) var edgeInsets
   @Environment(\.showsUserLocation) var showsUserLocation
@@ -53,4 +61,20 @@ public struct AdvancedMap {
   @Environment(\.onAnnotationDragGesture) var annotationDragHandler
   #endif
   @Environment(\.mapRegionChangingHandler) var regionChangingHandler
+}
+
+extension AdvancedMap {
+  #if os(tvOS)
+  public init(mapVisibility: Binding<MapVisibility?>) {
+    self._mapVisibility = mapVisibility
+  }
+  #else
+  public init(
+    mapVisibility: Binding<MapVisibility?>,
+    userTrackingMode: Binding<MKUserTrackingMode> = .constant(MKUserTrackingMode.none)
+  ) {
+    self._mapVisibility = mapVisibility
+    self._userTrackingMode = userTrackingMode
+  }
+  #endif
 }

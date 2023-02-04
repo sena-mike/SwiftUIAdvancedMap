@@ -18,17 +18,19 @@ struct ConfigurationView: View {
     case .satellite: return .imagery(.realistic)
     }
   }
-  @State var region: MKMapRect? = nil
+  @State var mapVisibility: MapVisibility? = nil
 
   var body: some View {
     NavigationStack {
       ZStack {
-        AdvancedMap(mapRect: $region)
+        AdvancedMap(mapVisibility: $mapVisibility)
           .mapConfiguration(configuration)
           .ignoresSafeArea()
           .onAppear {
             CLLocationManager().requestWhenInUseAuthorization()
+            #if !os(tvOS)
             CLLocationManager().startUpdatingLocation()
+            #endif
           }
       }
       .toolbar {

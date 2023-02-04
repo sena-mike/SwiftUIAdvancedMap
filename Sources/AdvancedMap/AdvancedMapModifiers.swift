@@ -69,9 +69,11 @@ struct OnLongPressMapGestureKey: EnvironmentKey {
   static let defaultValue: AdvancedMap.LongPressMapHandler? = nil
 }
 
+#if os(iOS) || os(macOS)
 struct OnAnnotationDragGestureKey: EnvironmentKey {
   static let defaultValue: AdvancedMap.AnnotationDragHandler? = nil
 }
+#endif
 
 struct OnMapRegionChangingHandlerKey: EnvironmentKey {
   static let defaultValue: AdvancedMap.RegionChangingHandler? = nil
@@ -162,10 +164,12 @@ extension EnvironmentValues {
     set { self[OnLongPressMapGestureKey.self] = newValue }
   }
 
+  #if os(iOS) || os(macOS)
   var onAnnotationDragGesture: AdvancedMap.AnnotationDragHandler? {
     get { self[OnAnnotationDragGestureKey.self] }
     set { self[OnAnnotationDragGestureKey.self] = newValue }
   }
+  #endif
 
   var mapRegionChangingHandler: AdvancedMap.RegionChangingHandler? {
     get { self[OnMapRegionChangingHandlerKey.self] }
