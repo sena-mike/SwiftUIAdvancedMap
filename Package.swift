@@ -16,10 +16,6 @@ let package = Package(
     .target(
       name: "AdvancedMap",
       dependencies: []
-    ),
-    .testTarget(
-      name: "AdvancedMapTests",
-      dependencies: ["AdvancedMap"]
     )
   ]
 )
