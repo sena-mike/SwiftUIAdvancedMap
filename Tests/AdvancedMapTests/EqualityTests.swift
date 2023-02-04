@@ -1,5 +1,6 @@
 @testable import AdvancedMap
 import CoreGraphics
+import Foundation
 import MapKit
 import XCTest
 
