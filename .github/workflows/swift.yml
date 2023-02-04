@@ -20,6 +20,8 @@ jobs:
       run: sudo xcode-select -s /Applications/Xcode_14.1.app/Contents/Developer
     - name: Build Package
       run: swift build
+    - name: Test Package
+      run: swift test
     - name: Check SDKs
       run: xcodebuild -showsdks
     - name: Build Example Project macOS & iOS

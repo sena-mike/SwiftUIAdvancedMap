@@ -21,7 +21,24 @@ public class Coordinator: NSObject, MKMapViewDelegate {
   }
 
   private func updateVisibleBinding() {
-    advancedMap.visibleMapRect = mapView?.visibleMapRect
+    guard let mapView else { return }
+    switch advancedMap.mapVisibility {
+    case .none:
+      // If clients initially provide `nil` for `mapVisibility` this will write a
+      // `MapVisibility.centerCoordinate` to the binding.
+      advancedMap.mapVisibility = .centerCoordinate(mapView.centerCoordinate)
+    case .region:
+      advancedMap.mapVisibility = .region(mapView.region)
+    case .centerCoordinate:
+      advancedMap.mapVisibility = .centerCoordinate(mapView.centerCoordinate)
+    case .visibleMapRect:
+      advancedMap.mapVisibility = .visibleMapRect(mapView.visibleMapRect)
+    case .annotations:
+      // We don't write back to the binding
+      break
+    case .camera:
+      advancedMap.mapVisibility = .camera(mapView.camera)
+    }
   }
 
   // MARK: MKMapViewDelegate
