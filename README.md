@@ -1,3 +1,9 @@
+[Deprecated]
+
+This project was started before iOS 17's SwiftUI for MapKit which mostly obviates the need for this library. I will likely not be making further changes to this project. For more information see [this wwdc video](https://developer.apple.com/videos/play/wwdc2023/10043/).
+
+
+
 # SwiftUIAdvancedMap
 
 [![Swift](https://github.com/sena-mike/SwiftUIAdvancedMap/actions/workflows/swift.yml/badge.svg?branch=main)](https://github.com/sena-mike/SwiftUIAdvancedMap/actions/workflows/swift.yml)
